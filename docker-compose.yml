@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:16
+    container_name: nano_nodes_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: nano_nodes
+    ports:
+      - "5433:5432"
+    volumes:
+      - nano_nodes_pg:/var/lib/postgresql/data
+
+volumes:
+  nano_nodes_pg:
