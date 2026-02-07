@@ -1,12 +1,15 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../../api/auth/[...nextauth]/route";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/db";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function ProjectEditorPage({
   params,
 }: {
-  params: { projectId: string };
+  params: Promise<{ projectId: string }>;
 }) {
   const session = (await getServerSession(authOptions as any)) as any;
   if (!session?.user) redirect("/signin");
@@ -14,20 +17,17 @@ export default async function ProjectEditorPage({
   const userId = session.user.id as string | undefined;
   if (!userId) redirect("/signin");
 
-  const projectId = params.projectId;
+  const { projectId } = await params;
 
-  // Permisos: owner o miembro
   const project = await prisma.project.findFirst({
     where: {
       id: projectId,
       OR: [{ ownerId: userId }, { members: { some: { userId } } }],
     },
+    select: { id: true, name: true },
   });
 
-  if (!project) {
-    // Si no existe o no tenés permiso
-    redirect("/app");
-  }
+  if (!project) redirect("/app");
 
   return (
     <div className="space-y-4">
@@ -48,9 +48,7 @@ export default async function ProjectEditorPage({
       </div>
 
       <div className="h-[70vh] rounded-xl border border-zinc-800/80 bg-zinc-900/20 p-4">
-        <div className="text-sm text-zinc-300">
-          Acá va el canvas nodal.
-        </div>
+        <div className="text-sm text-zinc-300">Acá va el canvas nodal.</div>
         <div className="mt-2 text-xs text-zinc-500">
           Project ID: {project.id}
         </div>

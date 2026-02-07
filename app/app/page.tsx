@@ -1,55 +1,99 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../api/auth/[...nextauth]/route";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/db";
+import NewProjectButton from "./NewProjectButton";
+import Sidebar from "./Sidebar";
+import ProjectsGrid from "./ProjectsGrid";
 
-export default async function AppHome() {
+type View = "my" | "workspace" | "shared";
+
+export default async function AppHome({
+  searchParams,
+}: {
+  searchParams?: Promise<{ view?: string }>;
+}) {
   const session = (await getServerSession(authOptions as any)) as any;
   if (!session?.user) redirect("/signin");
 
   const userId = session.user.id as string | undefined;
   if (!userId) redirect("/signin");
 
-  const projects = await prisma.project.findMany({
-    where: {
-      OR: [{ ownerId: userId }, { members: { some: { userId } } }],
-    },
+  const sp = (await searchParams) ?? {};
+  const view = (["my", "workspace", "shared"].includes(sp.view ?? "")
+    ? (sp.view as View)
+    : "my") as View;
+
+  // 1) Mis proyectos (owner)
+  const owned = await prisma.project.findMany({
+    where: { ownerId: userId },
     orderBy: { updatedAt: "desc" },
+    select: { id: true, name: true, ownerId: true },
   });
 
+  // 2) Proyectos compartidos conmigo (miembro)
+  const memberships = await prisma.projectMember.findMany({
+    where: { userId },
+    select: {
+      role: true,
+      project: { select: { id: true, name: true, ownerId: true } },
+    },
+    orderBy: { project: { updatedAt: "desc" } },
+  });
+
+  const workspace = memberships
+    .filter((m) => m.role === "EDITOR")
+    .map((m) => m.project);
+
+  const sharedView = memberships
+    .filter((m) => m.role === "VIEWER")
+    .map((m) => m.project);
+
+  const counts = {
+    my: owned.length,
+    workspace: workspace.length,
+    shared: sharedView.length,
+  };
+
+  const projects =
+    view === "my" ? owned : view === "workspace" ? workspace : sharedView;
+
+  const title =
+    view === "my"
+      ? "My Files"
+      : view === "workspace"
+      ? "Workspace Files"
+      : "Shared with me (View)";
+
   return (
-    <>
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Proyectos</h1>
-          <p className="mt-1 text-sm text-zinc-400">
-            Tus grafos y proyectos.
-          </p>
+    <div className="flex gap-6">
+      <Sidebar active={view} counts={counts} />
+
+      <div className="min-w-0 flex-1">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold">{title}</h1>
+            <p className="mt-1 text-sm text-zinc-400">
+              {view === "my"
+                ? "Tus proyectos (owner)."
+                : view === "workspace"
+                ? "Proyectos donde podés editar."
+                : "Proyectos compartidos solo para ver."}
+            </p>
+          </div>
+
+          {/* Crear solo en "my" */}
+          {view === "my" ? <NewProjectButton /> : null}
         </div>
 
-        <button className="rounded-lg bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-white">
-          + Nuevo proyecto
-        </button>
+        {projects.length === 0 ? (
+          <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/20 p-6 text-sm text-zinc-300">
+            No hay proyectos en esta sección.
+          </div>
+        ) : (
+          <ProjectsGrid projects={projects} currentUserId={userId} />
+        )}
       </div>
-
-      {projects.length === 0 ? (
-        <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/20 p-6 text-sm text-zinc-300">
-          No tenés proyectos todavía.
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {projects.map((p) => (
-            <a
-              key={p.id}
-              href={`/projects/${p.id}`}
-              className="rounded-xl border border-zinc-800/80 bg-zinc-900/20 p-4 hover:bg-zinc-900/35"
-            >
-              <div className="text-base font-medium">{p.name}</div>
-              <div className="mt-2 text-xs text-zinc-500">ID: {p.id}</div>
-            </a>
-          ))}
-        </div>
-      )}
-    </>
+    </div>
   );
 }

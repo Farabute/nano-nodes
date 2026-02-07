@@ -20,7 +20,7 @@ model User {
   emailVerified DateTime?
   createdAt     DateTime @default(now())
 
-  projectsOwned Project[] @relation("OwnedProjects")
+  projectsOwned Project[]       @relation("OwnedProjects")
   memberships   ProjectMember[]
 
   accounts Account[]
@@ -34,9 +34,11 @@ model Project {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  owner   User @relation("OwnedProjects", fields: [ownerId], references: [id])
+  owner   User            @relation("OwnedProjects", fields: [ownerId], references: [id])
   members ProjectMember[]
   graphs  GraphVersion[]
+
+  @@index([ownerId])
 }
 
 model ProjectMember {
@@ -50,6 +52,7 @@ model ProjectMember {
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([projectId, userId])
+  @@index([userId])
 }
 
 model GraphVersion {
@@ -63,6 +66,7 @@ model GraphVersion {
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@unique([projectId, versionNumber])
+  @@index([projectId])
 }
 
 /* =======================
