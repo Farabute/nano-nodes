@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/db";
+import Editor from "./Editor";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -24,35 +25,38 @@ export default async function ProjectEditorPage({
       id: projectId,
       OR: [{ ownerId: userId }, { members: { some: { userId } } }],
     },
-    select: { id: true, name: true },
+    select: { id: true, name: true, ownerId: true },
   });
 
   if (!project) redirect("/app");
+
+  // por ahora: si es miembro igual puede editar (después lo atamos a role)
+  const canEdit = true;
 
   return (
     <div className="space-y-4">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">{project.name}</h1>
+          <h1 className="text-2xl font-semibold text-white">{project.name}</h1>
           <p className="mt-1 text-sm text-zinc-400">
-            Editor (próximo paso: React Flow + autosave + versiones)
+            Editor (React Flow). Próximo: autosave + versiones
           </p>
         </div>
 
         <a
           href="/app"
-          className="rounded-lg border border-zinc-700 px-4 py-2 text-sm hover:bg-zinc-900/40"
+          className="rounded-lg border border-zinc-700 px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-900/40"
         >
           ← Volver
         </a>
       </div>
 
-      <div className="h-[70vh] rounded-xl border border-zinc-800/80 bg-zinc-900/20 p-4">
-        <div className="text-sm text-zinc-300">Acá va el canvas nodal.</div>
-        <div className="mt-2 text-xs text-zinc-500">
-          Project ID: {project.id}
-        </div>
-      </div>
+      <Editor
+        projectId={project.id}
+        canEdit={canEdit}
+        initialNodes={undefined as any}
+        initialEdges={undefined as any}
+      />
     </div>
   );
 }

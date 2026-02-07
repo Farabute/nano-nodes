@@ -59,21 +59,18 @@ export default function ProjectsGrid({
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
       {projects.map((p) => {
         const canDelete = p.ownerId === currentUserId;
         const isOpen = openForId === p.id;
         const isViewer = p.role === "VIEWER";
 
         return (
-          <div
-            key={p.id}
-            className="relative rounded-xl border border-zinc-800/80 bg-zinc-900/20 p-4 hover:bg-zinc-900/35"
-          >
-            {/* Menu trigger */}
+          <div key={p.id} className="relative group">
+            {/* Menu trigger (misma funcionalidad) */}
             <button
               type="button"
-              className="absolute right-2 top-2 rounded-md border border-zinc-800 bg-zinc-950/40 px-2 py-1 text-xs text-zinc-300 hover:bg-zinc-900/60"
+              className="absolute right-3 top-3 z-10 rounded-md border border-zinc-800 bg-black/60 px-2 py-1 text-xs text-zinc-200 opacity-0 transition group-hover:opacity-100 hover:bg-black"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -85,22 +82,48 @@ export default function ProjectsGrid({
               ⋯
             </button>
 
-            {/* Card link */}
-            <a href={`/app/projects/${p.id}`} className="block">
-              <div className="text-base font-medium">{p.name}</div>
+            {/* Card link (misma navegación) */}
+            <a
+              href={`/app/projects/${p.id}`}
+              className="block"
+              onClick={() => setOpenForId(null)}
+            >
+              {/* Square card */}
+              <div
+                className={[
+                  "aspect-square overflow-hidden rounded-xl border",
+                  "border-zinc-800/80 bg-zinc-900/20",
+                  "transition-all duration-200",
+                  "group-hover:border-zinc-600/80 group-hover:bg-zinc-900/35",
+                  "group-hover:shadow-lg group-hover:shadow-black/30",
+                ].join(" ")}
+              >
+                {/* Placeholder image */}
+                <img
+                  src="/brand/project-placeholder.webp"
+                  alt="Project cover"
+                  className="h-full w-full object-cover opacity-80 transition group-hover:opacity-95"
+                  draggable={false}
+                />
+              </div>
 
-              {isViewer ? (
-                <div className="mt-2 text-xs text-zinc-500">Solo lectura</div>
-              ) : null}
+              {/* Text */}
+              <div className="mt-3">
+                <div className="text-sm font-medium text-white">{p.name}</div>
 
-              <div className="mt-2 text-xs text-zinc-500">ID: {p.id}</div>
+                {isViewer ? (
+                  <div className="mt-1 text-xs text-zinc-400">Solo lectura</div>
+                ) : null}
+
+                <div className="mt-1 text-xs text-zinc-500">ID: {p.id}</div>
+              </div>
             </a>
 
-            {/* Dropdown */}
+            {/* Dropdown (misma lógica) */}
             {isOpen && (
               <div
                 ref={menuRef}
-                className="absolute right-2 top-10 w-44 overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950 shadow-lg"
+                className="absolute right-3 top-12 z-20 w-44 overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950 shadow-lg"
               >
                 <button
                   type="button"

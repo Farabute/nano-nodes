@@ -1,26 +1,28 @@
 @import "tailwindcss";
 
+/* Tipografía global (la seteamos desde layout.tsx con --font-sora) */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #000000;
+  --foreground: #ffffff;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+
+  /* Usar Sora en toda la app */
+  --font-sans: var(--font-sora);
+
+  /* Si querés mantener mono (opcional), dejalo o borralo */
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* IMPORTANTE: sacamos el prefers-color-scheme porque querés dark fijo */
+/* (si querés volver a soportar light/dark después, lo reactivamos) */
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
 }
