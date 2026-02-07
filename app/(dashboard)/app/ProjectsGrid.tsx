@@ -84,7 +84,7 @@ export default function ProjectsGrid({
 
             {/* Card link (misma navegación) */}
             <a
-              href={`/app/projects/${p.id}`}
+              href={`/editor/${p.id}`}
               className="block"
               onClick={() => setOpenForId(null)}
             >
@@ -131,7 +131,7 @@ export default function ProjectsGrid({
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    router.push(`/app/projects/${p.id}`);
+                    router.push(`/editor/${p.id}`);
                     setOpenForId(null);
                   }}
                 >
