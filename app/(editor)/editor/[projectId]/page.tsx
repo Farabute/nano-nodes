@@ -25,26 +25,22 @@ export default async function ProjectEditorPage({
       id: projectId,
       OR: [{ ownerId: userId }, { members: { some: { userId } } }],
     },
-    select: {
-      id: true,
-      name: true,
-      ownerId: true,
-    },
+    select: { id: true, name: true, ownerId: true },
   });
 
   if (!project) redirect("/app");
 
+  // por ahora
   const canEdit = true;
 
   return (
-    <div className="h-[100dvh] w-full bg-black">
-      <Editor
-        projectId={project.id}
-        projectName={project.name}
-        canEdit={canEdit}
-        initialNodes={[]}
-        initialEdges={[]}
-      />
-    </div>
+    <Editor
+      projectId={project.id}
+      projectName={project.name}
+      canEdit={canEdit}
+      initialNodes={[]}
+      initialEdges={[]}
+      initialTitle={project.name}
+    />
   );
 }
